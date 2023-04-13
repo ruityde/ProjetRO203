@@ -1,0 +1,13 @@
+A été fait et fonctionne :
+
+readInputFile qui renvoie
+	une matrice n*n (grille)
+	une matrice n*n*n*n (les i,j,k,l tq i,j > k,l)
+
+displayGrid qui affiche une instance non résolue
+
+generateDataSet qui génère un data set (que les grilles car saveInstance pas complet)
+
+generateInstance mais seulement la partie grille (pas les unequal)
+
+saveInstance mais seulement la partie grille (print pas les unequal)
