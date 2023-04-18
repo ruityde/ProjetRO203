@@ -240,7 +240,7 @@ Save a grid in a text file
 Save the coordinates of the unequalties in the text file (TODO)
 """
 
-function saveInstance(t::Matrix{Int64}, outputFile::String)
+function saveInstance(t::Matrix{Int64}, table_uneq::Matrix{Int64}, outputFile::String)
 
     n = size(t, 1)
 
@@ -264,6 +264,18 @@ function saveInstance(t::Matrix{Int64}, outputFile::String)
                 println(writer, "")
             end
         end
+    end
+
+    println(writer, "")
+
+    for line in 1:size(table_uneq,1)
+        print(writer, table_uneq[line,1])
+        print(writer, ",")
+        print(writer, table_uneq[line,2])
+        print(writer, " ")
+        print(writer, table_uneq[line,3])
+        print(writer, ",")
+        println(writer, table_uneq[line,4])
     end
 
     close(writer)
