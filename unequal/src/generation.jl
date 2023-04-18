@@ -41,7 +41,24 @@ function generateInstance(n::Int64, density::Float64, numb_unequal::Int64)
 
     # Creating the unequalities
 
-    # TODO
+    table_uneq = zeros(Int64,numb_unequal,4)
+
+    for uneq in 1:numb_unequal
+        coord = rand(1:n,2)
+        coord_neig = copy(coord)
+        valid = false
+        while !valid
+            valid = true
+            xory = rand(1:2)
+            coord_neig[xory] = coord[xory] + rand((1,-1))
+            if (count(coord_neig .> n) + count(coord_neig .< 1)) == 1
+                valid = false
+            end
+        end
+
+        table_uneq[uneq,:] = vcat(coord, coord_neig)
+
+    end
 
 
     # Deleting values to have the needed density
@@ -52,7 +69,7 @@ function generateInstance(n::Int64, density::Float64, numb_unequal::Int64)
     end
     table[mat .> density] .= 0
 
-    return table
+    return table, table_uneq
 
     
 end 
@@ -83,7 +100,8 @@ function generateDataSet()
 
                     if !isfile(fileName)
                         println("-- Generating file " * fileName)
-                        saveInstance(generateInstance(size, density, numb_uneq), fileName)
+                        (t, t_u) = generateInstance(size, density, numb_uneq)
+                        saveInstance(t, t_u, fileName)
                     end 
                 end
             end

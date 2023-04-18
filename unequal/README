@@ -6,7 +6,7 @@ readInputFile qui renvoie
 
 displayGrid qui affiche une instance non résolue
 
-generateDataSet qui génère un data set (que les grilles car saveInstance pas complet)
+generateDataSet qui génère un data set (que les grilles car generateInstance pas complet)
 
 generateInstance mais seulement la partie grille (pas les unequal)
 
