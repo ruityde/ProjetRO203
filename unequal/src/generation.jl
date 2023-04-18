@@ -15,7 +15,6 @@ Argument
 function generateInstance(n::Int64, density::Float64, numb_unequal::Int64)
 
     table = zeros(Int64, n, n)
-    table_unequal = zeros(Int64, n, n, n, n)
 
     # Creating a valid n*n grid
 
@@ -51,8 +50,15 @@ function generateInstance(n::Int64, density::Float64, numb_unequal::Int64)
             valid = true
             xory = rand(1:2)
             coord_neig[xory] = coord[xory] + rand((1,-1))
-            if (count(coord_neig .> n) + count(coord_neig .< 1)) == 1
+            # Si les coordonnées sont invalides
+            if (count(coord_neig .> n) + count(coord_neig .< 1)) > 0
+                coord_neig[xory] = coord[xory]
                 valid = false
+            # Sinon si les coordonnées sont valides mais que la valeur en coord est <= à celle en coord_neig, on les inverse
+            elseif table[coord] <= table[coord_neig]
+                temp = coord
+                coord = coord_neig
+                coord_neig = temp
             end
         end
 
@@ -85,7 +91,7 @@ Remark: a grid is generated only if the corresponding output file does not alrea
 function generateDataSet()
 
     # For each grid size considered
-    for size in [4, 8, 10, 20]
+    for size in [4]#, 8, 10] #, 20]
 
         # For each grid density considered
         for density in [0.1, 0.2, 0.3]
@@ -93,7 +99,7 @@ function generateDataSet()
             # For each number of unequalities
             for numb_uneq in 3:3:(size*2)
 
-                # Generate 5 instances
+                # Generate 3 instances
                 for instance in 1:3
 
                     fileName = "./data/instance_t" * string(size) * "_d" * string(density) * "_nu" * string(numb_uneq) * "_" * string(instance) * ".txt"
@@ -102,6 +108,8 @@ function generateDataSet()
                         println("-- Generating file " * fileName)
                         (t, t_u) = generateInstance(size, density, numb_uneq)
                         saveInstance(t, t_u, fileName)
+                    else
+                        println("File already created " * fileName)
                     end 
                 end
             end

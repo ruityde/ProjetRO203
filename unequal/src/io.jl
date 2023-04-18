@@ -86,7 +86,6 @@ Representation of the grid
  -----------
 
 """
-
 function displayGrid(table::Matrix{Int64}, table_unequal::Matrix{Int64})
 
     t_size = size(table,1)
@@ -162,9 +161,89 @@ function displayGrid(table::Matrix{Int64}, table_unequal::Matrix{Int64})
             println("|")
         end
     end
-    print(" ", "-"^(t_size*3-1))
+    println(" ", "-"^(t_size*3-1))
 
 end
+
+function writeGrid(fout::IOStream, table::Matrix{Int64}, table_unequal::Matrix{Int64})
+
+    t_size = size(table,1)
+
+    grid_unequal = zeros(Int64, t_size*2-1, t_size)
+
+    for i in 1:size(table_unequal, 1)
+        if table_unequal[i,1] == table_unequal[i,3]
+            if table_unequal[i,2] < table_unequal[i,4]
+                grid_unequal[2*table_unequal[i,1]-1, table_unequal[i,2]] = 1
+            else
+                grid_unequal[2*table_unequal[i,1]-1, table_unequal[i,4]] = -1
+            end
+        else
+            if table_unequal[i,1] < table_unequal[i,3]
+                grid_unequal[2*table_unequal[i,1], table_unequal[i,2]] = 1
+            else
+                grid_unequal[2*table_unequal[i,3], table_unequal[i,2]] = -1
+            end
+        end
+    end
+
+    println(fout, " ", "-"^(t_size*3-1))
+
+
+    for line in 1:(t_size)
+        # Print a line of numbers + line unequalities
+        print(fout, "|")
+
+        for col in 1:t_size
+            if table[line,col] == 0
+                print(fout, "..")
+            else
+                if table[line,col] < 10
+                    print(fout, table[line,col], " ")
+                else
+                    print(fout, table[line,col])
+                end
+            end
+
+            if col < t_size
+                if grid_unequal[2*line-1,col] == 1
+                    print(fout, ">")
+                else
+                    if grid_unequal[2*line-1, col] == -1
+                        print(fout, "<")
+                    else
+                        print(fout, " ")
+                    end
+                end
+            end
+        end
+        println(fout, "|")
+
+        # Print a line of column unequalities
+       
+        if line < t_size
+            print(fout, "|")
+            for col in 1:t_size
+                if grid_unequal[2*line, col] == 1
+                    print(fout, "v ")
+                else
+                    if grid_unequal[2*line, col] == -1
+                        print(fout, "^ ")
+                    else
+                        print(fout, "  ")
+                    end
+                end
+                if col < t_size
+                    print(fout, " ")
+                end
+            end
+            println(fout, "|")
+        end
+    end
+    println(fout, " ", "-"^(t_size*3-1))
+
+end
+
 
 """
 
