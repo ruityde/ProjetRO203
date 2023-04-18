@@ -38,7 +38,7 @@ function readInputFile(inputFile::String)
     table = zeros(Int64, t_size, t_size)
 
     nb_unequal = length(data) - t_size - 1
-    table_unequal = zeros(Int64, t_size, t_size, t_size, t_size)
+    table_unequal = zeros(Int64, nb_unequal, 4)
 
     i = 1
     # For each line of the input file
@@ -62,8 +62,9 @@ function readInputFile(inputFile::String)
         # Unequalities coordinates
         if i > t_size + 1
             line = replace(line, "," => " ")
-            coord = parse.(Int64, split(line, " "))
-            table_unequal[coord[1], coord[2], coord[3], coord[4]] = 1
+            #coord = parse.(Int64, split(line, " "))
+            table_unequal[i-t_size-1, :] = parse.(Int64, split(line, " "))
+            #table_unequal[coord[1], coord[2], coord[3], coord[4]] = 1
         end
 
         i += 1
@@ -86,9 +87,93 @@ Representation of the grid
 
 """
 
-function displayGrid(table::Matrix{Int64}, table_unequal::Array{Int64, 4})
+function displayGrid(table::Matrix{Int64}, table_unequal::Matrix{Int64})
 
     t_size = size(table,1)
+
+    grid_unequal = zeros(Int64, t_size*2-1, t_size)
+
+    for i in 1:size(table_unequal, 1)
+        if table_unequal[i,1] == table_unequal[i,3]
+            if table_unequal[i,2] < table_unequal[i,4]
+                grid_unequal[2*table_unequal[i,1]-1, table_unequal[i,2]] = 1
+            else
+                grid_unequal[2*table_unequal[i,1]-1, table_unequal[i,4]] = -1
+            end
+        else
+            if table_unequal[i,1] < table_unequal[i,3]
+                grid_unequal[2*table_unequal[i,1], table_unequal[i,2]] = 1
+            else
+                grid_unequal[2*table_unequal[i,3], table_unequal[i,2]] = -1
+            end
+        end
+    end
+
+    println(" ", "-"^(t_size*3-1))
+
+
+    for line in 1:(t_size)
+        # Print a line of numbers + line unequalities
+        print("|")
+
+        for col in 1:t_size
+            if table[line,col] == 0
+                print("..")
+            else
+                if table[line,col] < 10
+                    print(table[line,col], " ")
+                else
+                    print(table[line,col])
+                end
+            end
+
+            if col < t_size
+                if grid_unequal[2*line-1,col] == 1
+                    print(">")
+                else
+                    if grid_unequal[2*line-1, col] == -1
+                        print("<")
+                    else
+                        print(" ")
+                    end
+                end
+            end
+        end
+        println("|")
+
+        # Print a line of column unequalities
+       
+        if line < t_size
+            print("|")
+            for col in 1:t_size
+                if grid_unequal[2*line, col] == 1
+                    print("v ")
+                else
+                    if grid_unequal[2*line, col] == -1
+                        print("^ ")
+                    else
+                        print("  ")
+                    end
+                end
+                if col < t_size
+                    print(" ")
+                end
+            end
+            println("|")
+        end
+    end
+    print(" ", "-"^(t_size*3-1))
+
+end
+
+"""
+
+function displayGrid(table::Matrix{Int64}, table_unequal::Matrix{Int64})
+
+    t_size = size(table,1)
+
+    for i in 1:table_unequal
+
 
     println(" ", "-"^(t_size*3-1))
 
@@ -146,6 +231,9 @@ function displayGrid(table::Matrix{Int64}, table_unequal::Array{Int64, 4})
     print(" ", "-"^(t_size*3-1))
 
 end
+
+"""
+
 
 """
 Save a grid in a text file
