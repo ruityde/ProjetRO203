@@ -6,8 +6,8 @@ readInputFile qui renvoie
 
 displayGrid qui affiche une instance non résolue
 
-generateDataSet qui génère un data set (que les grilles car generateInstance pas complet)
+generateInstance qui génère une grille et une liste de coordonnée d'inégalités
 
-generateInstance mais seulement la partie grille (pas les unequal)
+generateDataSet qui génère un data set
 
-saveInstance mais seulement la partie grille (print pas les unequal)
+saveInstance qui save dans un file une instance générée
