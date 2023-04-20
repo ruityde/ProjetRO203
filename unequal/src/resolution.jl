@@ -44,7 +44,7 @@ function cplexSolve(table::Array{Int}, table_unequal::Array{Int})
     start = time()
 
     # Solve the model
-    #set_silent(m)
+    set_silent(m)
     optimize!(m)
 
     stop = time()
@@ -56,9 +56,6 @@ function cplexSolve(table::Array{Int}, table_unequal::Array{Int})
         solutionMatrix = hcat([[k for k in 1:n, i in 1:n if value(x[i,j,k]) == 1] for j in 1:n]...)
     else
         solutionMatrix = table
-
-        displayGrid(table, table_unequal)
-        println(m)
     end
 
     # Return:
@@ -69,16 +66,6 @@ function cplexSolve(table::Array{Int}, table_unequal::Array{Int})
 end
 
 """
-Heuristically solve an instance
-"""
-function heuristicSolve()
-
-    # TODO
-    println("In file resolution.jl, in method heuristicSolve(), TODO: fix input and output, define the model")
-    
-end 
-
-"""
 Solve all the instances contained in "../data" through CPLEX and heuristics
 
 The results are written in "../res/cplex" and "../res/heuristic"
@@ -87,12 +74,11 @@ Remark: If an instance has previously been solved (either by cplex or the heuris
 """
 function solveDataSet()
 
-    dataFolder = "./data/"
-    resFolder = "./res/"
+    dataFolder = "../data/"
+    resFolder = "../res/"
 
     # Array which contains the name of the resolution methods
     resolutionMethod = ["cplex"]
-    #resolutionMethod = ["cplex", "heuristique"]
 
     # Array which contains the result folder of each resolution method
     resolutionFolder = resFolder .* resolutionMethod
@@ -113,12 +99,7 @@ function solveDataSet()
         
         println("-- Resolution of ", file)
         table, table_unequal = readInputFile(dataFolder * file)
-       
-        #displayGrid(table, table_unequal)
 
-        # TODO
-        #println("In file resolution.jl, in method solveDataSet(), TODO: read value returned by readInputFile()")
-        
         # For each resolution method
         for methodId in 1:size(resolutionMethod, 1)
 
@@ -134,45 +115,14 @@ function solveDataSet()
                     # Solve it and get the results
                     isOptimal, resolutionTime, solvedTable = cplexSolve(table, table_unequal)
 
-                    # If a solution is found, write it
-                    if isOptimal
-                        #displayGrid(solvedTable, table_unequal)
-                    end
-
-                # If the method is one of the heuristics
-                else
-                    
-                    isSolved = false
-
-                    # Start a chronometer 
-                    startingTime = time()
-                    
-                    # While the grid is not solved and less than 100 seconds are elapsed
-                    while !isOptimal && resolutionTime < 100
-                        
-                        # TODO 
-                        println("In file resolution.jl, in method solveDataSet(), TODO: fix heuristicSolve() arguments and returned values")
-                        
-                        # Solve it and get the results
-                        isOptimal, resolutionTime = heuristicSolve()
-
-                        # Stop the chronometer
-                        resolutionTime = time() - startingTime
-                        
-                    end
-
-                    # Write the solution (if any)
-                    if isOptimal
-
-                        # TODO
-                        println("In file resolution.jl, in method solveDataSet(), TODO: write the heuristic solution in fout")
-                        
-                    end 
                 end
 
-                fout = open(outputFile, "w") 
+                fout = open(outputFile, "w")
                 try
-                    writeGrid(fout, solvedTable, table_unequal)
+                    # Write the solution found (if any)
+                    if isOptimal
+                        writeSolution(fout, solvedTable)
+                    end
 
                     println(fout, "solveTime = ", resolutionTime) 
                     println(fout, "isOptimal = ", isOptimal)
@@ -182,14 +132,12 @@ function solveDataSet()
                 finally
                     close(fout)
                 end
-
             else
                 println("Already solved in " * outputFile)
             end
 
-
             # Display the results obtained with the method on the current instance
-            #include(outputFile)
+            include(outputFile)
             println(resolutionMethod[methodId], " optimal: ", isOptimal)
             println(resolutionMethod[methodId], " time: " * string(round(solveTime, sigdigits=2)) * "s\n")
         end         

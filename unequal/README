@@ -1,13 +1,22 @@
-A été fait et fonctionne :
+# Unequal
 
-readInputFile qui renvoie
-	une matrice n*n (grille)
-	une matrice n*n*n*n (les i,j,k,l tq i,j > k,l)
+##Commandes
 
-displayGrid qui affiche une instance non résolue
+1) Se placer dans le dossier ProjetRO203/unequal/src
+2) Lancer julia
 
-generateInstance qui génère une grille et une liste de coordonnée d'inégalités
+3) Générer un dataset: 
 
-generateDataSet qui génère un data set
+	- include("generation.jl)
+	- generateDataSet()
 
-saveInstance qui save dans un file une instance générée
+3) Résoudre le dataset:
+
+	- include("resolution.jl")
+	- solveDataSet()
+
+4) Mise en forme des résultats:
+
+	- include("io.jl")
+	- performanceDiagram("../res/ResultatDiagramme.pdf")
+	- resultsArray("../res/ResultsArray.tex")

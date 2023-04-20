@@ -37,7 +37,6 @@ function generateInstance(n::Int64, density::Float64, numb_unequal::Int64)
         table[line, :] = newLine
     end
 
-
     # Creating the unequalities
 
     table_uneq = zeros(Int64,numb_unequal,4)
@@ -55,7 +54,7 @@ function generateInstance(n::Int64, density::Float64, numb_unequal::Int64)
                 coord_neig[xory] = coord[xory]
                 valid = false
             # Sinon si les coordonnées sont valides mais que la valeur en coord est <= à celle en coord_neig, on les inverse
-            elseif table[coord] <= table[coord_neig]
+            elseif table[coord[1], coord[2]] <= table[coord_neig[1], coord_neig[2]]
                 temp = coord
                 coord = coord_neig
                 coord_neig = temp
@@ -66,6 +65,7 @@ function generateInstance(n::Int64, density::Float64, numb_unequal::Int64)
 
     end
 
+    displayGrid(table, table_uneq);
 
     # Deleting values to have the needed density
 
@@ -91,7 +91,7 @@ Remark: a grid is generated only if the corresponding output file does not alrea
 function generateDataSet()
 
     # For each grid size considered
-    for size in [4]#, 8, 10] #, 20]
+    for size in [4, 8, 10]
 
         # For each grid density considered
         for density in [0.1, 0.2, 0.3]
@@ -102,7 +102,7 @@ function generateDataSet()
                 # Generate 3 instances
                 for instance in 1:3
 
-                    fileName = "./data/instance_t" * string(size) * "_d" * string(density) * "_nu" * string(numb_uneq) * "_" * string(instance) * ".txt"
+                    fileName = "../data/instance_t" * string(size) * "_d" * string(density) * "_nu" * string(numb_uneq) * "_" * string(instance) * ".txt"
 
                     if !isfile(fileName)
                         println("-- Generating file " * fileName)
