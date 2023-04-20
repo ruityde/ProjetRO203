@@ -423,6 +423,7 @@ function resultsArray(outputFile::String)
 \usepackage[french]{babel}
 \usepackage [utf8] {inputenc} % utf-8 / latin1 
 \usepackage{multicol}
+\usepackage{amssymb} % To display checkmarks
 
 \setlength{\hoffset}{-18pt}
 \setlength{\oddsidemargin}{0pt} % Marge gauche sur pages impaires
@@ -534,7 +535,7 @@ function resultsArray(outputFile::String)
                 println(fout, " & ", round(solveTime, digits=2), " & ")
 
                 if isOptimal
-                    println(fout, "\$\\times\$")
+                    println(fout, "\$\\checkmark\$")
                 end 
                 
             # If the instance has not been solved by this method
