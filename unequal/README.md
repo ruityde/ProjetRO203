@@ -18,5 +18,5 @@
 4) Mise en forme des résultats:
 
 	- include("io.jl")
-	- performanceDiagram("../res/ResultatDiagramme.pdf")
+	- performanceDiagram("../res/ResultatDiagramme.png")
 	- resultsArray("../res/ResultsArray.tex")

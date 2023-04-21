@@ -422,6 +422,7 @@ function resultsArray(outputFile::String)
 
 \usepackage[french]{babel}
 \usepackage [utf8] {inputenc} % utf-8 / latin1 
+\usepackage[T1]{fontenc}
 \usepackage{multicol}
 \usepackage{amssymb} % To display checkmarks
 
@@ -536,6 +537,8 @@ function resultsArray(outputFile::String)
 
                 if isOptimal
                     println(fout, "\$\\checkmark\$")
+                else
+                    println(fout, "\$\\times\$")
                 end 
                 
             # If the instance has not been solved by this method
