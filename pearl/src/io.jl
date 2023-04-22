@@ -37,13 +37,17 @@ function readInputFile(inputFile::String)
 
 end
 
-function displayGrid(size_grid::Int64, white_list::Matrix{Int64}, black_list::Matrix{Int64})
+function displayGrid(size_grid::Int64, white_list::Matrix{Int64}, black_list::Matrix{Int64}, x::Vector{Tuple{Int64,Int64,Int64}})
     
     grid = zeros(Int64, size_grid, size_grid)
 
+    #for l in 1:n^2
+        #x[l] = (l,2,3)
+        #x[l] = (l,0,0)
+    #end
+
     for i in 1:size(white_list,1)
         grid[white_list[i,1], white_list[i,2]] = 1
-        println("x")
     end
 
     for j in 1:size(black_list, 1)
@@ -64,13 +68,36 @@ function displayGrid(size_grid::Int64, white_list::Matrix{Int64}, black_list::Ma
                     print("x")
                 end
             end
-            if j != size_grid
-                print(" ")
+            x_numb = size_grid*(i-1) +j
+            if j < size_grid
+                if x[x_numb][2] == 2 || x[x_numb][3] == 2
+                    print("-")
+                else
+                    print(" ")
+                end
             end
         end
+
         println("|")
+
+        if i<size_grid
+            print("|")
+
+            for k in 1:size_grid
+                x_numb = size_grid*(i-1) + k
+                if i < n
+                    if x[x_numb][2] == 3 || x[x_numb][3] == 3
+                        print("|")
+                    else
+                        print(" ")
+                    end
+                    if k < n
+                        print(" ")
+                    end
+                end
+            end
+            println("|")
+        end
     end
-
     println(" ", "-"^(size_grid*2-1))
-
 end
