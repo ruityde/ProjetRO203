@@ -8,14 +8,14 @@ TOL = 0.00001
 """
 Solve an instance with CPLEX
 """
-function cplexSolve(n::Int, Noirs::Array{Int}, Blancs::Array{Int})
+function cplexSolve(n::Int, noirs::Array{Int}, blancs::Array{Int})
 
     # Taille du terrain avec les variables de bord
     N = n+2
     # Indices des cases noires dans le terrain avec les bords supplémentaires
-    newNoirs = [(div(i-1,n)+1)*N + (i-1)%n + 2 for i in Noirs]
+    newNoirs = [(div(i-1,n)+1)*N + (i-1)%n + 2 for i in noirs]
     # Indices des cases blanches dans le terrain avec les bords supplémentaires
-    newBlancs = [(div(i-1,n)+1)*N + (i-1)%n + 2 for i in Blancs]
+    newBlancs = [(div(i-1,n)+1)*N + (i-1)%n + 2 for i in blancs]
 
     # Create the model
     m = Model(CPLEX.Optimizer)
@@ -142,11 +142,8 @@ function solveDataSet()
     for file in filter(x->occursin(".txt", x), readdir(dataFolder))  
         
         println("-- Resolution of ", file)
-        readInputFile(dataFolder * file)
+        terrainSize, cycleLength, noirs, blancs = readInputFile(dataFolder * file)
 
-        # TODO
-        println("In file resolution.jl, in method solveDataSet(), TODO: read value returned by readInputFile()")
-        
         # For each resolution method
         for methodId in 1:size(resolutionMethod, 1)
             
@@ -154,26 +151,14 @@ function solveDataSet()
 
             # If the instance has not already been solved by this method
             if !isfile(outputFile)
-                
-                fout = open(outputFile, "w")  
-
                 resolutionTime = -1
                 isOptimal = false
                 
                 # If the method is cplex
                 if resolutionMethod[methodId] == "cplex"
-                    
-                    # TODO 
-                    println("In file resolution.jl, in method solveDataSet(), TODO: fix cplexSolve() arguments and returned values")
-                    
+
                     # Solve it and get the results
-                    isOptimal, resolutionTime = cplexSolve()
-                    
-                    # If a solution is found, write it
-                    if isOptimal
-                        # TODO
-                        println("In file resolution.jl, in method solveDataSet(), TODO: write cplex solution in fout") 
-                    end
+                    isOptimal, resolutionTime, solvedCycle = cplexSolve(terrainSize, noirs, blancs)
 
                 # If the method is one of the heuristics
                 else
@@ -190,7 +175,7 @@ function solveDataSet()
                         println("In file resolution.jl, in method solveDataSet(), TODO: fix heuristicSolve() arguments and returned values")
                         
                         # Solve it and get the results
-                        isOptimal, resolutionTime = heuristicSolve()
+                        isOptimal, resolutionTime, solvedCycle = heuristicSolve()
 
                         # Stop the chronometer
                         resolutionTime = time() - startingTime
@@ -206,14 +191,24 @@ function solveDataSet()
                     end 
                 end
 
-                println(fout, "solveTime = ", resolutionTime) 
-                println(fout, "isOptimal = ", isOptimal)
-                
-                # TODO
-                println("In file resolution.jl, in method solveDataSet(), TODO: write the solution in fout") 
-                close(fout)
-            end
+                fout = open(outputFile, "w")  
+                try
+                    # Write the solution found (if any)
+                    if isOptimal
+                        println(fout, "solution = ", solvedCycle)
+                    end
 
+                    println(fout, "solveTime = ", resolutionTime) 
+                    println(fout, "isOptimal = ", isOptimal)
+
+                catch e
+                    showerror(stdout, e)
+                finally
+                    close(fout)
+                end
+            else
+                println("Already solved in " * outputFile)
+            end
 
             # Display the results obtained with the method on the current instance
             include(outputFile)
