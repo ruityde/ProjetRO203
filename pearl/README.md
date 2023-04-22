@@ -9,3 +9,6 @@ displayGrid qui affiche une instance non résolue
 
 InstanceTest game id : 6x6:bBBnWaBbWfBaBbB
 	-> cplexSolve(6, [3 4 21 31 33 36], [19 24])
+
+	5x5:bWdBfWeBcB
+	-> cplexSolve(5, [8 21 25], [3 15])
