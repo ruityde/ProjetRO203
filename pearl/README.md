@@ -7,3 +7,5 @@ readInputFile qui renvoie
 
 displayGrid qui affiche une instance non résolue
 
+InstanceTest game id : 6x6:bBBnWaBbWfBaBbB
+	-> cplexSolve(6, [3 4 21 31 33 36], [19 24])
