@@ -107,6 +107,7 @@ function solveDataSet()
 
             # If the instance has not already been solved by this method
             if !isfile(outputFile)
+                resolutionTime = -1
                 isOptimal = false
                 
                 # If the method is cplex

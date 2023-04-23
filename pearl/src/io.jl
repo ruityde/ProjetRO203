@@ -72,6 +72,11 @@ function displayGrid(size_grid::Int64, w::Vector{Int64}, b::Vector{Int64}, x::Ve
 
     println(" ", "-"^(size_grid*2-1))
 
+    x_ids = [-1 for i in 1:size_grid^2]
+    for i in 1:size(x,1)
+        x_ids[x[i][1]] = i
+    end
+
     for i in 1:size_grid
         print("|")
         for j in 1:size_grid
@@ -85,8 +90,9 @@ function displayGrid(size_grid::Int64, w::Vector{Int64}, b::Vector{Int64}, x::Ve
                 end
             end
             x_numb = size_grid*(i-1) +j
+            x_id = x_ids[x_numb]
             if j < size_grid
-                if x[x_numb][2] == 2 || x[x_numb][3] == 2
+                if x_id != -1 && (x[x_id][2] == 2 || x[x_id][3] == 2)
                     print("-")
                 else
                     print(" ")
@@ -101,13 +107,14 @@ function displayGrid(size_grid::Int64, w::Vector{Int64}, b::Vector{Int64}, x::Ve
 
             for k in 1:size_grid
                 x_numb = size_grid*(i-1) + k
-                if i < n
-                    if x[x_numb][2] == 3 || x[x_numb][3] == 3
+                x_id = x_ids[x_numb]
+                if i < size_grid
+                    if x_id != -1 && (x[x_id][2] == 3 || x[x_id][3] == 3)
                         print("|")
                     else
                         print(" ")
                     end
-                    if k < n
+                    if k < size_grid
                         print(" ")
                     end
                 end
