@@ -15,8 +15,8 @@ Ce qui a été codé mais ne fonctionne pas encore
 	- La génération d'instance
 
 Instances de test 
+
 	- Game Id: 6x6:bBBnWaBbWfBaBbB
 		-> cplexSolve(6, [3 4 21 31 33 36], [19 24])
-
 	- Game Id: 5x5:bWdBfWeBcB
 		-> cplexSolve(5, [8 21 25], [3 15])
