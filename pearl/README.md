@@ -1,6 +1,6 @@
 Ce qui a été implémenté et testé
 
-	-Résolution par Cplex fonctionne
+	-Résolution par Cplex
 	-displayGrid qui affiche une instance non résolue
 	-readInputFile qui renvoie
 
