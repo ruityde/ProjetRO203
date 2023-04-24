@@ -2,6 +2,7 @@
 using CPLEX, JuMP
 
 include("generation.jl")
+include("heuristique.jl")
 
 TOL = 0.00001
 
@@ -101,10 +102,15 @@ end
 """
 Heuristically solve an instance
 """
-function heuristicSolve()
+function heuristicSolve(n::Int64, white::Vector{Int64}, black::Vector{Int64})
 
-    # TODO
-    println("In file resolution.jl, in method heuristicSolve(), TODO: fix input and output, define the model")
+    start = time()
+
+    isSolved, solvedCycle = heuristique(n,white,black)
+
+    stop = time()
+
+    return isSolved, stop - start, solvedCycle
     
 end 
 
@@ -175,20 +181,20 @@ function solveDataSet()
                         println("In file resolution.jl, in method solveDataSet(), TODO: fix heuristicSolve() arguments and returned values")
                         
                         # Solve it and get the results
-                        isOptimal, resolutionTime, solvedCycle = heuristicSolve()
+                        isSolved, resolutionTime, solvedCycle = heuristicSolve(terrainSize, white, black)
 
                         # Stop the chronometer
                         resolutionTime = time() - startingTime
                         
                     end
 
-                    # Write the solution (if any)
-                    if isOptimal
+                    # Est-ce que la solution est optimale
+                    isOptimal = false
 
-                        # TODO
-                        println("In file resolution.jl, in method solveDataSet(), TODO: write the heuristic solution in fout")
-                        
-                    end 
+                    # Si la solution n'est pas optimale
+                    if !isOptimal
+
+                    end
                 end
 
                 if isOptimal
