@@ -1,5 +1,6 @@
 # This file contains methods to generate a data set of instances (i.e., sudoku grids)
 include("io.jl")
+include("tools.jl")
 
 """
 Generate an n*n grid with a given density
@@ -118,6 +119,8 @@ function GenerateCycle(n, density)
         iterations += 1
     end
 
+    #PrintTerrain(x,n)
+
     return cycleLen, [(i, j) for i in 1:n^2, j in 1:n^2 if i < j && x[i,j]==1]
 end
 
@@ -171,19 +174,6 @@ function RandomDirOutCycle(hasBeenInCycle,n,i)
     return exists, dir
 end
 
-# Returns true if i+dir is next to i in the terrain, false otherwise
-function IsNeighbor(n,i,dir)
-    if !ValidCoord(n,i)
-        return false
-    end
-
-    if dir in (1,-1)
-        return ValidCoord(n,i+dir) && div(i+dir-1,n) == div(i-1,n)
-    else
-        return ValidCoord(n, i+dir)
-    end
-end
-
 # Adds a line between i and j in x
 function AddLine(x, hasBeenInCycle, i, j)
     x[i, j] = 1
@@ -233,19 +223,7 @@ function IsInCycle(x, n, i)
     return isInCycle
 end
 
-# Returns true if i is a coordinate inside the terrain
-function ValidCoord(n, i)
-    return i >= 1 && i <= n^2
-end
-
-function ChangeDirType(n,dir)
-    if abs(dir) == 1
-        return dir+1
-    else
-        return div(dir,n) + 2
-    end
-end
-
+# Retourne au plus 2 directions dans lesquelle la case i est liée à une autre case du cycle
 function GetDirs(x,n,i)
     dirA = -1
     dirD = -1
@@ -262,6 +240,7 @@ function GetDirs(x,n,i)
     return dirA, dirD
 end
 
+# Affiche le terrain à partir de l'ensemble x des arrètes du cycle
 function PrintTerrain(x,n)
     out = Vector{Tuple{Int64, Int64, Int64}}()
     for i in 1:n^2
