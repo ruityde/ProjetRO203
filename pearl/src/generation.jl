@@ -10,6 +10,11 @@ Argument
 """
 function generateInstance(n::Int64, density::Float64)
     cycleLen, cycle = GenerateCycle(n, density)
+
+    blancs = []
+    noirs = []
+
+    return cycleLen, blancs, noirs
 end 
 
 function GenerateCycle(n, density)
