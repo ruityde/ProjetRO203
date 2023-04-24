@@ -11,8 +11,8 @@ Argument
 function generateInstance(n::Int64, density::Float64, max_points::Int64)
     cycleLen, cycle = GenerateCycle(n, density)
 
-    blancs = []
-    noirs = []
+    blancs = [i for i in 2:2:n^2]
+    noirs = [i for i in 1:2:n^2]
 
     return cycleLen, blancs, noirs
 end 
@@ -290,17 +290,17 @@ function generateDataSet()
         for density in [0.6, 0.7, 0.8]
 
             # For each number of points
-            for max_points in [round(density*size^2)/i for i in 2:5]
+            for max_points in [round(Int64, density*size^2/i) for i in 2:5]
                 
                 # Generate 3 instances
                 for instance in 1:3
 
-                    fileName = "../data/instance_t" * string(size) * "_d" * string(density) * "_nu" * string(numb_uneq) * "_" * string(instance) * ".txt"
+                    fileName = "../data/instance_t" * string(size) * "_d" * string(density) * "_mp" * string(max_points) * "_" * string(instance) * ".txt"
 
                     if !isfile(fileName)
                         println("-- Generating file " * fileName)
-                        (t, t_u) = generateInstance(size, density, max_points)
-                        saveInstance(t, t_u, fileName)
+                        cycleLen, blancs, noirs = generateInstance(size, density, max_points)
+                        saveInstance(size, cycleLen, blancs, noirs, fileName)
                     else
                         println("File already created " * fileName)
                     end 

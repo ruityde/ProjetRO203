@@ -27,13 +27,15 @@ function readInputFile(inputFile::String)
     cycle_len = parse(Int64, data[2])
 
     for i in 1:size_w
-        w = parse.(Int64, split(data[i+3], ","))
-        white_list[i] = size_grid*(w[1]-1) + w[2]
+        #w = parse.(Int64, split(data[i+3], ","))
+        #white_list[i] = size_grid*(w[1]-1) + w[2]
+        white_list[i] = parse.(Int64, data[i+3])
     end
 
     for j in 1:size_b
-        b = parse.(Int64, split(data[j+4+size_w], ","))
-        black_list[j] = size_grid*(b[1]-1) + b[2]
+        #b = parse.(Int64, split(data[j+4+size_w], ","))
+        #black_list[j] = size_grid*(b[1]-1) + b[2]
+        black_list[j] = parse.(Int64, data[j+4+size_w])
     end
 
     return size_grid, cycle_len, white_list, black_list
@@ -44,22 +46,17 @@ function displayGrid(size_grid::Int64, w::Vector{Int64}, b::Vector{Int64}, x::Ve
     
     grid = zeros(Int64, size_grid, size_grid)
 
-    #for l in 1:size_grid^2
-        #x[l] = (l,2,3)
-        #x[l] = (l,0,0)
-    #end
-
     white_list = zeros(Int64, length(w), 2)
     black_list = zeros(Int64, length(b), 2)
 
     for i in 1:length(w)
-        white_list[i,1] = floor(w[i]/size_grid)+1
-        white_list[i,2] = w[i]%size_grid
+        white_list[i,1] = floor((w[i]-1)/size_grid) + 1
+        white_list[i,2] = (w[i]-1)%size_grid + 1
     end
 
     for j in 1: length(b)
-        black_list[j,1] = floor(b[j]/size_grid) +1
-        black_list[j,2] = b[j]%size_grid
+        black_list[j,1] = floor((b[j]-1)/size_grid) + 1
+        black_list[j,2] = (b[j]-1)%size_grid + 1
     end
 
 
@@ -125,3 +122,43 @@ function displayGrid(size_grid::Int64, w::Vector{Int64}, b::Vector{Int64}, x::Ve
     end
     println(" ", "-"^(size_grid*2-1))
 end
+
+
+"""
+Save the size of a grid and the length of the cycle
+Save the coordinates of the black and white points in the text file
+"""
+function saveInstance(terrainSize::Int64, cycleLen::Int64, white::Vector{Int64}, black::Vector{Int64}, outputFile::String)
+
+    sizeWhite = size(white,1)
+    sizeBlack = size(black,1)
+
+    # Open the output file
+    writer = open(outputFile, "w")
+
+    # Si une erreur apparait, on ferme le fichier avant de quitter
+    try
+        println(writer, terrainSize)
+        println(writer, cycleLen)
+
+        print(writer, "\n")
+
+        # For each white position
+        for i in 1:sizeWhite
+            println(writer, white[i])
+        end
+
+        print(writer, "\n")
+
+        # For each white position
+        for i in 1:sizeBlack
+            println(writer, black[i])
+        end
+
+    catch e
+        showerror(stdout, e)
+    finally
+        close(writer)
+    end
+    
+end 

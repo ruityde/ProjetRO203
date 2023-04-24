@@ -142,7 +142,7 @@ function solveDataSet()
     for file in filter(x->occursin(".txt", x), readdir(dataFolder))  
         
         println("-- Resolution of ", file)
-        terrainSize, cycleLength, noirs, blancs = readInputFile(dataFolder * file)
+        terrainSize, cycleLength, white, black = readInputFile(dataFolder * file)
 
         # For each resolution method
         for methodId in 1:size(resolutionMethod, 1)
@@ -158,7 +158,7 @@ function solveDataSet()
                 if resolutionMethod[methodId] == "cplex"
 
                     # Solve it and get the results
-                    isOptimal, resolutionTime, solvedCycle = cplexSolve(terrainSize, noirs, blancs)
+                    isOptimal, resolutionTime, solvedCycle = cplexSolve(terrainSize, black, white)
 
                 # If the method is one of the heuristics
                 else
@@ -191,7 +191,13 @@ function solveDataSet()
                     end 
                 end
 
+                if isOptimal
+                    displayGrid(terrainSize, white, black, solvedCycle)
+                end
+
                 fout = open(outputFile, "w")  
+
+                # Si une erreur apparait, on ferme le fichier avant de quitter
                 try
                     # Write the solution found (if any)
                     if isOptimal
