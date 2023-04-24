@@ -9,9 +9,10 @@ Argument
 - density: percentage in [0, 1] of initial values in the grid
 """
 function generateInstance(n::Int64, density::Float64)
-    wantedLen = rand(round(density*n^2):n^2)
+    wantedLen = round(density*n^2)
 
     x = hcat([[0 for i in 1:n^2] for j in 1:n^2]...)
+    hasBeenInCycle = hcat([0 for i in 1:n^2]...)
 
     # Choix d'un point de départ du cycle
     i = rand(1:n^2)
@@ -48,11 +49,13 @@ function generateInstance(n::Int64, density::Float64)
     end
 
     # On ajoute le carré i,j,j+dirK,k
-    AddLine(x,i,j)
-    AddLine(x,j,j+dirK)
-    AddLine(x,j+dirK,k)
-    AddLine(x,k,i)
+    AddLine(x,hasBeenInCycle,i,j)
+    AddLine(x,hasBeenInCycle,j,j+dirK)
+    AddLine(x,hasBeenInCycle,j+dirK,k)
+    AddLine(x,hasBeenInCycle,k,i)
     cycleLen = 4
+
+    PrintTerrain(x,n)
 
     # Nombre maximum d'itération
     maxIterations = 2*(n^2)
@@ -62,16 +65,9 @@ function generateInstance(n::Int64, density::Float64)
         exist = false
         i = 0
         dirK = 0
-        println("begin ", i)
         while !exist
-            #println("in ", (i, dirK, cycleLen))
             i = RandomInCycle(x, n)
-            exist, dirK = RandomDirOutCycle(x,n,i)
-        end
-        println(i, " in cycle ", IsInCycle(x,n,i))
-
-        if !IsInCycle(x,n,i)
-            PrintTerrain(x,n)
+            exist, dirK = RandomDirOutCycle(hasBeenInCycle,n,i)
         end
 
         # Choix d'une direction aléatoire dirL orthogonale à dirK tq i+dirL soit dans le cycle
@@ -83,10 +79,10 @@ function generateInstance(n::Int64, density::Float64)
         end
         dirL *= rand((1, -1))
         l = i + dirL
-        if !ValidCoord(n,l) || !IsInCycle(x,n,l) || !IsNeighbor(n, i, dirL)
+        if !ValidCoord(n,l) || !IsInCycle(x,n,l) || x[i,l] != 1 || !IsNeighbor(n, i, dirL)
             dirL *= -1
             l = i + dirL
-            if !ValidCoord(n, l) || !IsInCycle(x,n,l) || !IsNeighbor(n, i, dirL)
+            if !ValidCoord(n, l) || !IsInCycle(x,n,l) || x[i,l] != 1 || !IsNeighbor(n, i, dirL)
                 throw(DomainError((l,i,dirK, IsInCycle(x,n,l), IsInCycle(x,n,i+dirK), IsInCycle(x,n,i)), "Error: maybe k is not out of the cycle, or i is not in the cycle"))
             end
         end
@@ -95,7 +91,7 @@ function generateInstance(n::Int64, density::Float64)
         # Si ca échoue, on est dans la situation de **** explicitée dans le rapport
         # On effectue alors une rotation du problème
         trials = 0
-        pointsAdded = TryAddPoint(x,n,i,dirK,dirL)
+        pointsAdded = TryAddPoint(x,n,hasBeenInCycle,i,dirK,dirL)
         while pointsAdded == -1 && trials < 4
             i = k + dirL
             tempDirK = -dirL
@@ -104,49 +100,44 @@ function generateInstance(n::Int64, density::Float64)
 
             trials += 1
             if ValidCoord(n, i) && ValidCoord(n, i+dirK) && ValidCoord(n, i+dirL)
-                println("before try ", (i,dirK,dirL))
-                pointsAdded = TryAddPoint(x,n,i,dirK,dirL)
+                pointsAdded = TryAddPoint(x,n,hasBeenInCycle,i,dirK,dirL)
             end
         end
 
-        if pointsAdded != -1
-            cycleLen += pointsAdded
-        end
+        cycleLen += pointsAdded
 
-        println("cLen ", cycleLen)
+        println("\nIteration ", iterations, ": Points in the cycle ", cycleLen, " / ", wantedLen)
         PrintTerrain(x,n)
         iterations += 1
     end
 
-    PrintTerrain(x,n)
-
-    return true #[(i, j) for i in 1:n^2, j in i:n^2 if x[i,j]==1]
+    return true#sort([(i, j) for i in 1:n^2, j in i:n^2 if x[i,j]==1])
 end 
 
 # Fonction ajoutant le point i+dirK au cycle via le carré passant par i,i+dirK,i+dirK+dirL,i+dirL
 # Retourne le nombre d'éléments ajoutés au cycle
-function TryAddPoint(x,n,i, dirK, dirL)
+function TryAddPoint(x,n,hasBeenInCycle,i, dirK, dirL)
     k = i + dirK
     l = i + dirL
-    pointsAdded = -1
+    pointsAdded = 0
     if !IsInCycle(x,n,l+dirK)
         # Ajout et suppression des arrêtes au cycle
-        AddLine(x, i, k)
-        AddLine(x, k, l+dirK)
-        AddLine(x, l+dirK, l)
+        AddLine(x,hasBeenInCycle, i, k)
+        AddLine(x,hasBeenInCycle, k, l+dirK)
+        AddLine(x,hasBeenInCycle, l+dirK, l)
 
         RemoveLine(x, i, l)
 
         pointsAdded = 2
     elseif x[l+dirK, l] == 1
         # Ajout et suppression des arrêtes au cycle
-        AddLine(x, i, k)
-        AddLine(x, k, k+dirL)
+        AddLine(x,hasBeenInCycle, i, k)
+        AddLine(x,hasBeenInCycle, k, k+dirL)
 
         RemoveLine(x, l+dirK, l)
         RemoveLine(x, i, l)
 
-        pointsAdded = 0
+        pointsAdded = 1
     end
 
     return pointsAdded
@@ -154,11 +145,11 @@ end
 
 # Returns true if a direction around i pointing outside of the cycle exists, false otehrwise
 # Returns a random direction among the ones pointing outsideof the cycle
-function RandomDirOutCycle(x,n,i)
+function RandomDirOutCycle(hasBeenInCycle,n,i)
     exists = false
     dirOut = []
     for dir in (-n, -1, 1, n)
-        if !IsInCycle(x,n,i+dir) && IsNeighbor(n,i,dir)
+        if ValidCoord(n,i+dir) && hasBeenInCycle[i+dir] != 1 && IsNeighbor(n,i,dir)
             dirOut = vcat(dirOut, dir)
             exists = true
         end
@@ -187,9 +178,12 @@ function IsNeighbor(n,i,dir)
 end
 
 # Adds a line between i and j in x
-function AddLine(x, i, j)
+function AddLine(x, hasBeenInCycle, i, j)
     x[i, j] = 1
     x[j, i] = 1
+
+    hasBeenInCycle[i] = 1
+    hasBeenInCycle[j] = 1
 end
 
 # Remove the line between i and j in x
@@ -204,14 +198,13 @@ function RandomInCycle(x,n)
     if cycleLen == 0
         throw(DomainError(cycleLen, "The terrain has no cycle"))
     end
-    num = rand(1:(cycleLen-1))
+    num = rand(1:cycleLen)
     found = 0
     id = 1
     while found < num && ValidCoord(n,id)
         if IsInCycle(x, n, id)
             found+=1
         end
-        #println((cycleLen, num, found, id))
         id += 1
     end
     
@@ -271,10 +264,9 @@ function PrintTerrain(x,n)
                 println("Error: la case ", i, " n'est liées qu'à une seule case")
             end
             out = vcat(out, (i, dirArrive, dirDepart))
-            
         end
     end
-    println(out)
+    
     displayGrid(n, Vector{Int64}(), Vector{Int64}(), out)
 end
 
