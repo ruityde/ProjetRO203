@@ -236,6 +236,8 @@ function solveDataSet()
 
                 # Si une erreur apparait, on ferme le fichier avant de quitter
                 try
+                    println(fout, "n = ", terrainSize)
+
                     # Write the solution found (if any)
                     if isOptimal
                         println(fout, "solution = ", solvedCycle)
