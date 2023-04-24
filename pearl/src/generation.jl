@@ -8,7 +8,7 @@ Argument
 - n: size of the grid
 - density: percentage in [0, 1] of initial values in the grid
 """
-function generateInstance(n::Int64, density::Float64)
+function generateInstance(n::Int64, density::Float64, max_points::Int64)
     cycleLen, cycle = GenerateCycle(n, density)
 
     blancs = []
