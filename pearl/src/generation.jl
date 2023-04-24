@@ -9,6 +9,10 @@ Argument
 - density: percentage in [0, 1] of initial values in the grid
 """
 function generateInstance(n::Int64, density::Float64)
+    cycleLen, cycle = GenerateCycle(n, density)
+end 
+
+function GenerateCycle(n, density)
     wantedLen = round(density*n^2)
 
     x = hcat([[0 for i in 1:n^2] for j in 1:n^2]...)
@@ -54,8 +58,6 @@ function generateInstance(n::Int64, density::Float64)
     AddLine(x,hasBeenInCycle,j+dirK,k)
     AddLine(x,hasBeenInCycle,k,i)
     cycleLen = 4
-
-    PrintTerrain(x,n)
 
     # Nombre maximum d'itération
     maxIterations = 2*(n^2)
@@ -106,13 +108,13 @@ function generateInstance(n::Int64, density::Float64)
 
         cycleLen += pointsAdded
 
-        println("\nIteration ", iterations, ": Points in the cycle ", cycleLen, " / ", wantedLen)
-        PrintTerrain(x,n)
+        #println("\nIteration ", iterations, ": Points in the cycle ", cycleLen, " / ", wantedLen)
+        #PrintTerrain(x,n)
         iterations += 1
     end
 
-    return true#sort([(i, j) for i in 1:n^2, j in i:n^2 if x[i,j]==1])
-end 
+    return cycleLen, [(i, j) for i in 1:n^2, j in 1:n^2 if i < j && x[i,j]==1]
+end
 
 # Fonction ajoutant le point i+dirK au cycle via le carré passant par i,i+dirK,i+dirK+dirL,i+dirL
 # Retourne le nombre d'éléments ajoutés au cycle

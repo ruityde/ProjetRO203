@@ -18,24 +18,25 @@ function readInputFile(inputFile::String)
     data = readlines(datafile)
     close(datafile)
 
-    size_w = findnext(x -> x == "", data, 3) - 3
+    size_w = findnext(x -> x == "", data, 4) - 4
     white_list = zeros(Int64, size_w)
-    size_b = length(data) - size_w - 3
+    size_b = length(data) - size_w - 4
     black_list = zeros(Int64, size_b)
 
     size_grid = parse(Int64, data[1])
+    cycle_len = parse(Int64, data[2])
 
     for i in 1:size_w
-        w = parse.(Int64, split(data[i+2], ","))
+        w = parse.(Int64, split(data[i+3], ","))
         white_list[i] = size_grid*(w[1]-1) + w[2]
     end
 
     for j in 1:size_b
-        b = parse.(Int64, split(data[j+3+size_w], ","))
+        b = parse.(Int64, split(data[j+4+size_w], ","))
         black_list[j] = size_grid*(b[1]-1) + b[2]
     end
 
-    return size_grid, white_list, black_list
+    return size_grid, cycle_len, white_list, black_list
 
 end
 
