@@ -4,16 +4,149 @@ include("tools.jl")
 
 """
 Generate an n*n grid with a given density
-
 Argument
 - n: size of the grid
 - density: percentage in [0, 1] of initial values in the grid
+
+Horizontal
+-o-
+
+Vertical
+|
+o
+|
+
+
+1   |   |   2
+    |   |
+  --o   o--
+  --o   o--
+    |   |   
+3   |   |   4
+
+
 """
+
 function generateInstance(n::Int64, density::Float64, max_points::Int64)
     cycleLen, cycle = GenerateCycle(n, density)
 
     blancs = [i for i in 2:2:n^2]
     noirs = [i for i in 1:2:n^2]
+
+    #Détection des blancs
+
+    for arete in cycle
+        isWhite = false
+        i,j = arete[1],arete[2]
+
+        #Horizontal
+        if i%n != 1
+            if j == i+1
+                if (i-1,i) in cycle
+                    if i-n >0
+                        if (i-n-1,i-1) in cycle || (i-n+1,i+1) in cycle
+                            isWhite = true
+                        end
+                    end
+                    if i+n <= n^2
+                        if (i-1, i+n-1) in cycle || (i+1,i+n+1) in cycle
+                            isWhite = true
+                        end
+                    end
+                end
+            end
+        end
+
+        #Vertical
+        if i>n
+            if j == i+n
+                if (i-n,i) in cycle
+                    if i%n > 1
+                        if (i-n-1,i-n) in cycle || (i+n-1,i+n) in cycle
+                            isWhite = true
+                        end
+                    end
+                    if i%n < n
+                        if (i-n,i-n+1) in cycle || (i+n,i+n+1) in cycle
+                            isWhite = true
+                        end
+                    end
+                end
+            end
+        end
+
+        if isWhite
+            push!(blancs,i)
+        end
+    end
+
+    #Détection des noirs
+
+    for arete in cycle
+        isBlack = false
+        i,j = arete[1], arete[2]
+
+        #Détection 2 et 4
+        if i%n < n-1
+            if j == i+1
+
+                #Détection 4
+                if i + 2n <= n^2
+                    if (i,i+n) in cycle
+                        if (i+1, i+2) in cycle && (i+n, i+2n) in cycle
+                            isBlack = true
+                        end
+                    end
+                end
+
+                #Détection 2
+                if i - 2n > 0
+                    if (i,i-n) in cycle
+                        if (i+1,i+2) in cycle && (i-n, i-2n) in cycle
+                            isBlack = true
+                        end
+                    end
+                end
+            end
+        end
+
+        #Détection 1 et 3
+        if i%n > 2
+            if j == i+n
+
+                #Détection 3
+                if i+2n <= n^2
+                    if (i-1,i) in cycle
+                        if (i-2,i-1) in cycle && (i+n,i+2n) in cycle
+                            isBlack = true
+                        end
+                    end
+                end
+
+                #Détection 1
+                if i-n > 0
+                    if (i+n-1,i+n) in cycle
+                        if (i+n-2,i+n-1) in cycle && (i-n,i) in cycle
+                            isBlack = true
+                            i = j
+                        end
+                    end
+                end
+            end
+        end
+
+        if isBlack
+            push!(noirs, i)
+        end
+    end
+
+    blancs = sort(shuffle(blancs)[1:min(max_points,length(blancs))])
+    noirs = sort(shuffle(noirs)[1:min(max_points,length(noirs))])
+
+
+
+
+
 
     return cycleLen, blancs, noirs
 end 
@@ -288,6 +421,3 @@ function generateDataSet()
         end
     end
 end
-
-
-
