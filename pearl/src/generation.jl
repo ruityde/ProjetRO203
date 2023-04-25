@@ -1,5 +1,6 @@
 # This file contains methods to generate a data set of instances (i.e., sudoku grids)
 include("io.jl")
+include("tools.jl")
 
 """
 Generate an n*n grid with a given density
@@ -26,12 +27,11 @@ o
 
 """
 
-
 function generateInstance(n::Int64, density::Float64, max_points::Int64)
     cycleLen, cycle = GenerateCycle(n, density)
 
-    blancs = []
-    noirs = []
+    blancs = [i for i in 2:2:n^2]
+    noirs = [i for i in 1:2:n^2]
 
     #Détection des blancs
 
@@ -251,7 +251,9 @@ function GenerateCycle(n, density)
         #PrintTerrain(x,n)
         iterations += 1
     end
-    PrintTerrain(x,n)
+
+    #PrintTerrain(x,n)
+
     return cycleLen, [(i, j) for i in 1:n^2, j in 1:n^2 if i < j && x[i,j]==1]
 end
 
@@ -305,19 +307,6 @@ function RandomDirOutCycle(hasBeenInCycle,n,i)
     return exists, dir
 end
 
-# Returns true if i+dir is next to i in the terrain, false otherwise
-function IsNeighbor(n,i,dir)
-    if !ValidCoord(n,i)
-        return false
-    end
-
-    if dir in (1,-1)
-        return ValidCoord(n,i+dir) && div(i+dir-1,n) == div(i-1,n)
-    else
-        return ValidCoord(n, i+dir)
-    end
-end
-
 # Adds a line between i and j in x
 function AddLine(x, hasBeenInCycle, i, j)
     x[i, j] = 1
@@ -367,19 +356,7 @@ function IsInCycle(x, n, i)
     return isInCycle
 end
 
-# Returns true if i is a coordinate inside the terrain
-function ValidCoord(n, i)
-    return i >= 1 && i <= n^2
-end
-
-function ChangeDirType(n,dir)
-    if abs(dir) == 1
-        return dir+1
-    else
-        return div(dir,n) + 2
-    end
-end
-
+# Retourne au plus 2 directions dans lesquelle la case i est liée à une autre case du cycle
 function GetDirs(x,n,i)
     dirA = -1
     dirD = -1
@@ -396,6 +373,7 @@ function GetDirs(x,n,i)
     return dirA, dirD
 end
 
+# Affiche le terrain à partir de l'ensemble x des arrètes du cycle
 function PrintTerrain(x,n)
     out = Vector{Tuple{Int64, Int64, Int64}}()
     for i in 1:n^2
@@ -409,4 +387,37 @@ function PrintTerrain(x,n)
     end
     
     displayGrid(n, Vector{Int64}(), Vector{Int64}(), out)
+end
+
+"""
+Generate all the instances
+
+Remark: a grid is generated only if the corresponding output file does not already exist
+"""
+function generateDataSet()
+    # For each grid size considered
+    for size in [4, 8, 10]
+
+        # For each grid density considered
+        for density in [0.6, 0.7, 0.8]
+
+            # For each number of points
+            for max_points in [round(Int64, density*size^2/i) for i in 2:5]
+                
+                # Generate 3 instances
+                for instance in 1:3
+
+                    fileName = "../data/instance_t" * string(size) * "_d" * string(density) * "_mp" * string(max_points) * "_" * string(instance) * ".txt"
+
+                    if !isfile(fileName)
+                        println("-- Generating file " * fileName)
+                        cycleLen, blancs, noirs = generateInstance(size, density, max_points)
+                        saveInstance(size, cycleLen, blancs, noirs, fileName)
+                    else
+                        println("File already created " * fileName)
+                    end 
+                end
+            end
+        end
+    end
 end

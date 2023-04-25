@@ -2,8 +2,18 @@
 using CPLEX, JuMP
 
 include("generation.jl")
+include("heuristique.jl")
+include("tools.jl")
 
 TOL = 0.00001
+
+function ToBigTerrain(n, N, i)
+    return (div(i-1,n)+1)*N + (i-1)%n + 2
+end
+
+function ToSmallTerrain(n,N,I)
+    return (div(I-1,N)-1)*n + (I-1)%N
+end
 
 """
 Solve an instance with CPLEX
@@ -13,9 +23,9 @@ function cplexSolve(n::Int, noirs::Array{Int}, blancs::Array{Int})
     # Taille du terrain avec les variables de bord
     N = n+2
     # Indices des cases noires dans le terrain avec les bords supplémentaires
-    newNoirs = [(div(i-1,n)+1)*N + (i-1)%n + 2 for i in noirs]
+    newNoirs = [ToBigTerrain(n, N, i) for i in noirs]
     # Indices des cases blanches dans le terrain avec les bords supplémentaires
-    newBlancs = [(div(i-1,n)+1)*N + (i-1)%n + 2 for i in blancs]
+    newBlancs = [ToBigTerrain(n,N,i) for i in blancs]
 
     # Create the model
     m = Model(CPLEX.Optimizer)
@@ -27,6 +37,7 @@ function cplexSolve(n::Int, noirs::Array{Int}, blancs::Array{Int})
 
     # Création des variables du problème
     @variable(m, x[1:N^2, 0:3, 0:3], Bin)
+    @variable(m, u[1:n^2], Int)
 
     # Aucun chemin ne passe sur les bords du terrain
     # Haut du terrain
@@ -69,6 +80,25 @@ function cplexSolve(n::Int, noirs::Array{Int}, blancs::Array{Int})
     # Blancs connectés à au moins un angle droit
     @constraint(m, Blancs_Connect_Angle[i in newBlancs], x[i+1,0,2] + x[i-1,2,0] + x[i-N,3,1] + x[i+N,1,3] + x[i+1,2,0] + x[i-1,0,2] + x[i-N,1,3] + x[i+N,3,1] <= 1)
 
+
+    #Pour éviter les sous-cycles (MTZ)
+    # On cherche un point initial devant apartenir au cycle (ie l'indice de u1 dans MTZ)
+    uInit_Id = -1
+    if size(blancs,1) != 0
+        uInit_Id = blancs[1]
+    elseif size(noirs,1) != 0
+        uInit_Id = noirs[1]
+    end
+    
+    # S'il existe un tel u1, on ajoute les contraintes MTZ
+    if  uInit_Id != -1
+        @constraint(m, MTZ_Init, u[uInit_Id] == 1)
+        @constraint(m, MTZ_Ineg[i in 1:n^2; i != uInit_Id], 2 <= u[i] <= n^2)
+
+        #Contrainte MTZ sur les éléments voisins de i
+        @constraint(m, MTZ_Condition_Sides[i in 1:n^2, j in (-1,1); i != uInit_Id && i+j != uInit_Id && IsNeighbor(n,i,j)], u[i] - u[i+j] + 1 <= (1 - sum([x[ToBigTerrain(n,N,i),k,ChangeDirType(n,j)] for k in 0:3]))*n^2)
+    end
+
     # Pour debug les contraintes
     #println(m[:Non_croisement][40])
 
@@ -85,8 +115,9 @@ function cplexSolve(n::Int, noirs::Array{Int}, blancs::Array{Int})
 
     solutionFound = primal_status(m) == MOI.FEASIBLE_POINT
 
+    # On récupère la solution et la converti pour la repasser en indice dans le terrain d'origine
     if solutionFound
-        solution = [((div(I-1,N)-1)*n + (I-1)%N, j, k) for I in 1:N^2, k in 0:3, j in 0:3 if value(x[I,j,k]) == 1]
+        solution = [(ToSmallTerrain(n,N,I), j, k) for I in 1:N^2, k in 0:3, j in 0:3 if value(x[I,j,k]) == 1]
     else
         solution = []
     end
@@ -94,6 +125,7 @@ function cplexSolve(n::Int, noirs::Array{Int}, blancs::Array{Int})
     # Return:
     # 1 - true if an optimum is found
     # 2 - the resolution time
+    # 3 - the found solution
     return solutionFound, stop - start, solution
     
 end
@@ -101,10 +133,15 @@ end
 """
 Heuristically solve an instance
 """
-function heuristicSolve()
+function heuristicSolve(n::Int64, white::Vector{Int64}, black::Vector{Int64})
 
-    # TODO
-    println("In file resolution.jl, in method heuristicSolve(), TODO: fix input and output, define the model")
+    start = time()
+
+    isSolved, solvedCycle = heuristique(n,white,black)
+
+    stop = time()
+
+    return isSolved, stop - start, solvedCycle
     
 end 
 
@@ -142,7 +179,7 @@ function solveDataSet()
     for file in filter(x->occursin(".txt", x), readdir(dataFolder))  
         
         println("-- Resolution of ", file)
-        terrainSize, cycleLength, noirs, blancs = readInputFile(dataFolder * file)
+        terrainSize, cycleLength, white, black = readInputFile(dataFolder * file)
 
         # For each resolution method
         for methodId in 1:size(resolutionMethod, 1)
@@ -158,7 +195,7 @@ function solveDataSet()
                 if resolutionMethod[methodId] == "cplex"
 
                     # Solve it and get the results
-                    isOptimal, resolutionTime, solvedCycle = cplexSolve(terrainSize, noirs, blancs)
+                    isOptimal, resolutionTime, solvedCycle = cplexSolve(terrainSize, black, white)
 
                 # If the method is one of the heuristics
                 else
@@ -175,24 +212,32 @@ function solveDataSet()
                         println("In file resolution.jl, in method solveDataSet(), TODO: fix heuristicSolve() arguments and returned values")
                         
                         # Solve it and get the results
-                        isOptimal, resolutionTime, solvedCycle = heuristicSolve()
+                        isSolved, resolutionTime, solvedCycle = heuristicSolve(terrainSize, white, black)
 
                         # Stop the chronometer
                         resolutionTime = time() - startingTime
                         
                     end
 
-                    # Write the solution (if any)
-                    if isOptimal
+                    # Est-ce que la solution est optimale
+                    isOptimal = false
 
-                        # TODO
-                        println("In file resolution.jl, in method solveDataSet(), TODO: write the heuristic solution in fout")
-                        
-                    end 
+                    # Si la solution n'est pas optimale
+                    if !isOptimal
+
+                    end
+                end
+
+                if isOptimal
+                    displayGrid(terrainSize, white, black, solvedCycle)
                 end
 
                 fout = open(outputFile, "w")  
+
+                # Si une erreur apparait, on ferme le fichier avant de quitter
                 try
+                    println(fout, "n = ", terrainSize)
+
                     # Write the solution found (if any)
                     if isOptimal
                         println(fout, "solution = ", solvedCycle)

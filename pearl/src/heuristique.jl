@@ -1,5 +1,3 @@
-using JuMP, GLPK
-
 function place(v::Vector{Int64}, d::Int64, c::Int64)
 	if d in v
 		return true
