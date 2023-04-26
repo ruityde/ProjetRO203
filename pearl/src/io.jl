@@ -394,8 +394,6 @@ function timeVsSizeDiagram(outputFile::String)
         # Current position in the line
         currentId = 1
 
-        println(results[dim, currentId][2])
-
         # While the end of the line is not reached 
         while currentId <= size(results, 2) && results[dim, currentId][2] != Inf
 
@@ -404,10 +402,10 @@ function timeVsSizeDiagram(outputFile::String)
             n = results[dim, currentId][1]
             sum = 0
 
-             # While the value is the same
-            while results[dim, currentId][1] == n && currentId <= size(results, 2)
+            # While the value is the same
+            while currentId <= size(results, 2) && results[dim, currentId][1] == n
                 sum += results[dim, currentId][2]
-
+                
                 currentId += 1
                 identicalValues += 1
             end

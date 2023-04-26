@@ -1,18 +1,26 @@
-Ce qui a été implémenté et testé
+# Pearl
 
-	-Résolution par Cplex
-	-displayGrid qui affiche une instance non résolue
-	-readInputFile qui renvoie
+## Commandes
 
-		-la taille de la grille carrée
-		-la liste des coordonnées des points blancs
-		-la liste des coordonnées des points noirs
+1) Se placer dans le dossier ProjetRO203/pearl/src
+2) Lancer julia
 
-	-L'heuristique (dans un fichier à part pour l'instant)
+3) Générer un dataset: 
 
-Ce qui a été codé mais ne fonctionne pas encore
+	- include("generation.jl)
+	- generateDataSet()
 
-	- La génération d'instance
+3) Résoudre le dataset:
+
+	- include("resolution.jl")
+	- solveDataSet()
+
+4) Mise en forme des résultats:
+
+	- include("io.jl")
+	- resultsArray("../res/ResultsArray.tex")
+	- performanceDiagram("../res/ResultatDiagramme.png")
+	- timeVsSizeDiagram("../res/TimeVSize.png")
 
 Instances de test 
 

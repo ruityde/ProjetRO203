@@ -1,4 +1,7 @@
 # This file contains methods to generate a data set of instances (i.e., sudoku grids)
+
+using Random:shuffle
+
 include("io.jl")
 include("tools.jl")
 
@@ -27,11 +30,11 @@ o
 
 """
 
-function generateInstance(n::Int64, density::Float64, max_points::Int64)
+function generateInstance(n::Int64, density::Float64, max_points::Int64) 
     cycleLen, cycle = GenerateCycle(n, density)
 
-    blancs = [i for i in 2:2:n^2]
-    noirs = [i for i in 1:2:n^2]
+    blancs = Vector{Int64}()
+    noirs = Vector{Int64}()
 
     #Détection des blancs
 
@@ -61,7 +64,7 @@ function generateInstance(n::Int64, density::Float64, max_points::Int64)
         if i>n
             if j == i+n
                 if (i-n,i) in cycle
-                    if i%n > 1
+                    if i%n != 1
                         if (i-n-1,i-n) in cycle || (i+n-1,i+n) in cycle
                             isWhite = true
                         end
@@ -91,18 +94,18 @@ function generateInstance(n::Int64, density::Float64, max_points::Int64)
             if j == i+1
 
                 #Détection 4
-                if i + 2n <= n^2
+                if i + 2*n <= n^2
                     if (i,i+n) in cycle
-                        if (i+1, i+2) in cycle && (i+n, i+2n) in cycle
+                        if (i+1, i+2) in cycle && (i+n, i+2*n) in cycle
                             isBlack = true
                         end
                     end
                 end
 
                 #Détection 2
-                if i - 2n > 0
-                    if (i,i-n) in cycle
-                        if (i+1,i+2) in cycle && (i-n, i-2n) in cycle
+                if i - 2*n > 0
+                    if (i-n,i) in cycle
+                        if (i+1,i+2) in cycle && (i-2*n, i-n) in cycle
                             isBlack = true
                         end
                     end
@@ -111,13 +114,13 @@ function generateInstance(n::Int64, density::Float64, max_points::Int64)
         end
 
         #Détection 1 et 3
-        if i%n > 2
+        if i%n > 2 || i%n == 0
             if j == i+n
 
                 #Détection 3
-                if i+2n <= n^2
+                if i+2*n <= n^2
                     if (i-1,i) in cycle
-                        if (i-2,i-1) in cycle && (i+n,i+2n) in cycle
+                        if (i-2,i-1) in cycle && (i+n,i+2*n) in cycle
                             isBlack = true
                         end
                     end
@@ -140,16 +143,20 @@ function generateInstance(n::Int64, density::Float64, max_points::Int64)
         end
     end
 
+    # On s'assure que chaque point n'apparait qu'une seule fois
+    # (évite des redondances et des problèmes avec Cplex lors de la déclaration des contraintes)
+    blancs = unique(blancs)
+    noirs = unique(noirs)
+
+    # On retourne au plus max_points de chaque couleur, de manière aléatoire et triés par ordre d'indice croissant
     blancs = sort(shuffle(blancs)[1:min(max_points,length(blancs))])
     noirs = sort(shuffle(noirs)[1:min(max_points,length(noirs))])
 
-
-
-
-
+    #DisplayTerrainWithCycle(cycle, n, blancs, noirs)
 
     return cycleLen, blancs, noirs
 end 
+
 
 function GenerateCycle(n, density)
     wantedLen = round(density*n^2)
@@ -357,7 +364,7 @@ function IsInCycle(x, n, i)
 end
 
 # Retourne au plus 2 directions dans lesquelle la case i est liée à une autre case du cycle
-function GetDirs(x,n,i)
+function GetDirsAround(x,n,i)
     dirA = -1
     dirD = -1
     for dir in (-n, -1, 1, n)
@@ -378,7 +385,7 @@ function PrintTerrain(x,n)
     out = Vector{Tuple{Int64, Int64, Int64}}()
     for i in 1:n^2
         if IsInCycle(x,n,i)
-            dirArrive, dirDepart = GetDirs(x,n,i)
+            dirArrive, dirDepart = GetDirsAround(x,n,i)
             if dirArrive == -1 || dirDepart == -1
                 println("Error: la case ", i, " n'est liées qu'à une seule case")
             end
@@ -389,6 +396,47 @@ function PrintTerrain(x,n)
     displayGrid(n, Vector{Int64}(), Vector{Int64}(), out)
 end
 
+# Retourne la direction (0,1,2,3) de i à j, -1 s'il y a une erreur
+function GetDir(n,i,j)
+    if !ValidCoord(n,i) || !ValidCoord(n,j)
+        return -1
+    end
+
+    dir = j - i
+    if !IsNeighbor(n,i,dir)
+        return -1
+    end
+    
+    return ChangeDirType(n,dir)
+end
+
+# Affiche le terrain à partir de l'ensemble x des arrètes du cycle
+function DisplayTerrainWithCycle(cycle,n,blancs,noirs)
+    out = Vector{Tuple{Int64, Int64, Int64}}()
+    for i in 1:n^2
+        dirDepart = -1
+        dirArrive = -1
+        iInCycle = false
+        for j in (i+1):n^2
+            if (i,j) in cycle || (j,i) in cycle
+                iInCycle = true
+
+                if dirDepart == -1
+                    dirDepart = GetDir(n,i,j)
+                elseif dirArrive == -1
+                    dirArrive = GetDir(n,i,j)
+                end
+            end
+        end
+
+        if iInCycle
+            out = vcat(out, (i, dirArrive, dirDepart))
+        end
+    end
+    
+    displayGrid(n, blancs, noirs, out)
+end
+
 """
 Generate all the instances
 
@@ -396,7 +444,7 @@ Remark: a grid is generated only if the corresponding output file does not alrea
 """
 function generateDataSet()
     # For each grid size considered
-    for size in [4, 8, 10]
+    for size in [4, 5, 6, 7, 8, 9, 10]
 
         # For each grid density considered
         for density in [0.6, 0.7, 0.8]

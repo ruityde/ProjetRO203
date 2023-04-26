@@ -18,7 +18,7 @@ end
 """
 Solve an instance with CPLEX
 """
-function cplexSolve(n::Int, noirs::Array{Int}, blancs::Array{Int})
+function cplexSolve(n::Int, cycleLen::Int, noirs::Array{Int}, blancs::Array{Int})
 
     # Taille du terrain avec les variables de bord
     N = n+2
@@ -93,10 +93,10 @@ function cplexSolve(n::Int, noirs::Array{Int}, blancs::Array{Int})
     # S'il existe un tel u1, on ajoute les contraintes MTZ
     if  uInit_Id != -1
         @constraint(m, MTZ_Init, u[uInit_Id] == 1)
-        @constraint(m, MTZ_Ineg[i in 1:n^2; i != uInit_Id], 2 <= u[i] <= n^2)
+        @constraint(m, MTZ_Ineg[i in 1:n^2; i != uInit_Id], 2 <= u[i] <= cycleLen)
 
         #Contrainte MTZ sur les éléments voisins de i
-        @constraint(m, MTZ_Condition_Sides[i in 1:n^2, j in (-1,1); i != uInit_Id && i+j != uInit_Id && IsNeighbor(n,i,j)], u[i] - u[i+j] + 1 <= (1 - sum([x[ToBigTerrain(n,N,i),k,ChangeDirType(n,j)] for k in 0:3]))*n^2)
+        @constraint(m, MTZ_Condition_Sides[i in 1:n^2, j in (-n,-1,1,n); i != uInit_Id && i+j != uInit_Id && IsNeighbor(n,i,j)], u[i] - u[i+j] + 1 <= (1 - sum([x[ToBigTerrain(n,N,i),k,ChangeDirType(n,j)] for k in 0:3]))*cycleLen)
     end
 
     # Pour debug les contraintes
@@ -195,7 +195,7 @@ function solveDataSet()
                 if resolutionMethod[methodId] == "cplex"
 
                     # Solve it and get the results
-                    isOptimal, resolutionTime, solvedCycle = cplexSolve(terrainSize, black, white)
+                    isOptimal, resolutionTime, solvedCycle = cplexSolve(terrainSize, cycleLength, black, white)
 
                 # If the method is one of the heuristics
                 else
