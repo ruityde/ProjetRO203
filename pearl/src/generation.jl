@@ -396,45 +396,11 @@ function PrintTerrain(x,n)
     displayGrid(n, Vector{Int64}(), Vector{Int64}(), out)
 end
 
-# Retourne la direction (0,1,2,3) de i à j, -1 s'il y a une erreur
-function GetDir(n,i,j)
-    if !ValidCoord(n,i) || !ValidCoord(n,j)
-        return -1
-    end
-
-    dir = j - i
-    if !IsNeighbor(n,i,dir)
-        return -1
-    end
-    
-    return ChangeDirType(n,dir)
-end
-
 # Affiche le terrain à partir de l'ensemble x des arrètes du cycle
 function DisplayTerrainWithCycle(cycle,n,blancs,noirs)
-    out = Vector{Tuple{Int64, Int64, Int64}}()
-    for i in 1:n^2
-        dirDepart = -1
-        dirArrive = -1
-        iInCycle = false
-        for j in (i+1):n^2
-            if (i,j) in cycle || (j,i) in cycle
-                iInCycle = true
-
-                if dirDepart == -1
-                    dirDepart = GetDir(n,i,j)
-                elseif dirArrive == -1
-                    dirArrive = GetDir(n,i,j)
-                end
-            end
-        end
-
-        if iInCycle
-            out = vcat(out, (i, dirArrive, dirDepart))
-        end
-    end
+    cycleFormat = ToSolutionFormat(n,cycle)
     
-    displayGrid(n, blancs, noirs, out)
+    displayGrid(n, blancs, noirs, cycleFormat)
 end
 
 """

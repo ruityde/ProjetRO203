@@ -1,4 +1,3 @@
-
 include("io.jl")
 
 function heuristique(n, white, black)
@@ -42,7 +41,7 @@ function heuristique(n, white, black)
         end
       
     end
-    println(sort(collect(loop)))
+    
     return sort(collect(loop))
 end
 

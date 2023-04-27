@@ -133,15 +133,19 @@ end
 """
 Heuristically solve an instance
 """
-function heuristicSolve(n::Int64, white::Vector{Int64}, black::Vector{Int64})
+function heuristicSolve(n::Int64, white::Vector{Int64}, black::Vector{Int64}, cycleLen::Int64)
 
     start = time()
 
-    isSolved, solvedCycle = heuristique(n,white,black)
+    solvedCycle = heuristique(n,white,black)
 
     stop = time()
 
-    return isSolved, stop - start, solvedCycle
+    println(solvedCycle)
+
+    solvedCycleFormat = ToSolutionFormat(n,solvedCycle)
+
+    return size(solvedCycle,1) == cycleLen - 1, stop - start, solvedCycleFormat
     
 end 
 
@@ -158,8 +162,8 @@ function solveDataSet()
     resFolder = "../res/"
 
     # Array which contains the name of the resolution methods
-    resolutionMethod = ["cplex"]
-    #resolutionMethod = ["cplex", "heuristique"]
+    #resolutionMethod = ["cplex"]
+    resolutionMethod = ["cplex", "heuristique"]
 
     # Array which contains the result folder of each resolution method
     resolutionFolder = resFolder .* resolutionMethod
@@ -202,29 +206,17 @@ function solveDataSet()
                     
                     isSolved = false
 
-                    # Start a chronometer 
-                    startingTime = time()
-                    
-                    # While the grid is not solved and less than 100 seconds are elapsed
-                    while !isOptimal && resolutionTime < 100
-                        
-                        # TODO 
-                        println("In file resolution.jl, in method solveDataSet(), TODO: fix heuristicSolve() arguments and returned values")
-                        
-                        # Solve it and get the results
-                        isSolved, resolutionTime, solvedCycle = heuristicSolve(terrainSize, white, black)
-
-                        # Stop the chronometer
-                        resolutionTime = time() - startingTime
-                        
-                    end
+                    # Solve it and get the results
+                    isSolved, resolutionTime, solvedCycle = heuristicSolve(terrainSize, white, black, cycleLength)
 
                     # Est-ce que la solution est optimale
-                    isOptimal = false
+                    isOptimal = isSolved
 
                     # Si la solution n'est pas optimale
                     if !isOptimal
-
+                        println("Solution found by the heuristic is not optimal")
+                        println(solvedCycle)
+                        displayGrid(terrainSize, white, black, solvedCycle)
                     end
                 end
 
@@ -257,8 +249,13 @@ function solveDataSet()
 
             # Display the results obtained with the method on the current instance
             include(outputFile)
-            println(resolutionMethod[methodId], " optimal: ", isOptimal)
-            println(resolutionMethod[methodId], " time: " * string(round(solveTime, sigdigits=2)) * "s\n")
+"""
+            if occursin("instance_t10_d0.6_mp15", outputFile)
+                displayGrid(terrainSize, white, black, solution)
+            end
+"""
+            #println(resolutionMethod[methodId], " optimal: ", isOptimal)
+            #println(resolutionMethod[methodId], " time: " * string(round(solveTime, sigdigits=2)) * "s\n")
         end         
     end 
 end

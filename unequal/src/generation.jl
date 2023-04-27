@@ -44,21 +44,21 @@ function generateInstance(n::Int64, density::Float64, numb_unequal::Int64)
     for uneq in 1:numb_unequal
         coord = rand(1:n,2)
         coord_neig = copy(coord)
-        valid = false
-        while !valid
-            valid = true
-            xory = rand(1:2)
-            coord_neig[xory] = coord[xory] + rand((1,-1))
-            # Si les coordonnées sont invalides
-            if (count(coord_neig .> n) + count(coord_neig .< 1)) > 0
-                coord_neig[xory] = coord[xory]
-                valid = false
-            # Sinon si les coordonnées sont valides mais que la valeur en coord est <= à celle en coord_neig, on les inverse
-            elseif table[coord[1], coord[2]] <= table[coord_neig[1], coord_neig[2]]
-                temp = coord
-                coord = coord_neig
-                coord_neig = temp
-            end
+
+        xory = rand(1:2)
+        dir = rand((1,-1))
+        coord_neig[xory] = coord[xory] + dir
+
+        # Si les coordonnées sont invalides, on regarde dans l'autre direcion (nécessairement valide sauf si le terrain est de taille 1)
+        if (count(coord_neig .> n) + count(coord_neig .< 1)) > 0
+            coord_neig[xory] = coord[xory] - dir
+        end
+
+        # Si la valeur en coord est <= à celle en coord_neig, on les inverse
+        if table[coord[1], coord[2]] <= table[coord_neig[1], coord_neig[2]]
+            temp = coord
+            coord = coord_neig
+            coord_neig = temp
         end
 
         table_uneq[uneq,:] = vcat(coord, coord_neig)
@@ -70,7 +70,8 @@ function generateInstance(n::Int64, density::Float64, numb_unequal::Int64)
     # Deleting values to have the needed density
 
     mat = rand(n,n)
-    while count(mat .< density) != round(Int, n * n * density)
+    countValuesToKeep = round(Int, n * n * density)
+    while count(mat .< density) != countValuesToKeep
         mat = rand(n,n)
     end
     table[mat .> density] .= 0
