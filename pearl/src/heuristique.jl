@@ -54,7 +54,7 @@ function copy_open_d(open_d)
 end
 
 function valid_edge(edge, n)
-	return all(x -> x <= n^2, edge)
+	return all(x -> x <= n^2 && x > 0, edge)
 end
 
 #Create a list of open directions for each square i
