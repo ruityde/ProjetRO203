@@ -1,3 +1,4 @@
+
 include("io.jl")
 
 function heuristique(n, white, black)
@@ -13,22 +14,38 @@ function heuristique(n, white, black)
     prev_open_d = copy_open_d(open_d)
 
     while true
+    	if (15,21) in loop
+    		print("bb")
+    	end
         for i in black
             black_check(i, open_d, loop)
         end
-
+		if (15,21) in loop
+    		print("ab")
+    	end
         for i in white
             white_check(i, open_d, isWhite, loop)
+        end
+
+        if (15,21) in loop
+        	println("15")
+        	if (20,21) in loop
+        		println("20")
+        	end
+        	if (21,22) in loop
+        		println("22")
+        	end
         end
 
         not_all_straight_white(open_d, isWhite, loop)
 
         close_edges(open_d, loop)
-        
+
         update_unionEdge(open_d, loop, unionEdge)
         match_open_d(open_d)
 
-        fill_edges(open_d, loop, unionEdge)
+        loop = fill_edges(open_d, loop, unionEdge)
+
         close_edges(open_d, loop)
 
         update_unionEdge(open_d, loop, unionEdge)
@@ -41,7 +58,8 @@ function heuristique(n, white, black)
         end
       
     end
-    
+    println(sort(collect(loop)))
+    println(open_d[16],open_d[15])
     return sort(collect(loop))
 end
 
@@ -186,40 +204,11 @@ function find_orthogonal_direction(i, open_d)
 end
 
 
-"""
-#Find the possible edges according to the open directions
-function find_possible_edges(i, open_d)
-    n = Int(sqrt(length(open_d)))
-    edges = Set{Tuple{Int, Int}}()
-
-    # Check left neighbor
-    if in(0, open_d[i])
-        push!(edges, (i - 1, i))
-    end
-
-    # Check right neighbor
-    if in(2, open_d[i])
-        push!(edges, (i, i + 1))
-    end
-
-    # Check up neighbor
-    if in(1, open_d[i])
-        push!(edges, (i - n, i))
-    end
-
-    # Check down neighbor
-    if in(3, open_d[i])
-        push!(edges, (i, i + n))
-    end
-
-    return collect(edges)
-end
-"""
-
 #Add edges if there is a direction that you are sure you can go
 function black_check(i, open_d, loop)
     n = Int(sqrt(length(open_d)))
     opposite_dirs = find_opposite_directions(i, open_d, loop)
+    
     for dir in opposite_dirs
         edge1, edge2 = (0, 0), (0, 0)
         if dir == 0  # Left
@@ -254,6 +243,7 @@ function black_check(i, open_d, loop)
             push!(loop, edge2)
         end
     end
+    
 end
 
 
@@ -389,13 +379,13 @@ function close_edges(open_d, loop)
         end
         
         if left_edge in loop && down_edge in loop
-            del(open_d[i], 0)
+            del(open_d[i], 2)
             del(open_d[i], 1)
         end
         
         if up_edge in loop && right_edge in loop
-            del(open_d[i], 1)
-            del(open_d[i], 2)
+            del(open_d[i], 3)
+            del(open_d[i], 0)
         end
     end
 end
@@ -417,13 +407,13 @@ function fill_edges(open_d, loop, unionEdge)
 
     function find_possible_edges(i, open_d, unionEdge)
         possible_edges = []
-        if 0 ∈ open_d[i] && i - 1 ≥ 1 && unionEdge[i] ≠ unionEdge[i - 1]
+        if 0 ∈ open_d[i] && i%n != 1 && unionEdge[i] ≠ unionEdge[i - 1]
             push!(possible_edges, (i - 1, i))
         end
         if 1 ∈ open_d[i] && i - n ≥ 1 && unionEdge[i] ≠ unionEdge[i - n]
             push!(possible_edges, (i - n, i))
         end
-        if 2 ∈ open_d[i] && i + 1 ≤ n^2 && unionEdge[i] ≠ unionEdge[i + 1]
+        if 2 ∈ open_d[i] && i%n != 0 && unionEdge[i] ≠ unionEdge[i + 1]
             push!(possible_edges, (i, i + 1))
         end
         if 3 ∈ open_d[i] && i + n ≤ n^2 && unionEdge[i] ≠ unionEdge[i + n]
